@@ -29096,15 +29096,13 @@ async function post_run() {
         }
         // Wait until the post step is marked as running
         const post_step = job.steps.find(step => step.name === post_step_name);
-        if (!post_step) {
-            throw new Error(`Step not found: ${post_step_name}`);
-        }
-        if (post_step.started_at) {
+        if (post_step && post_step.started_at) {
             break;
         }
         if (i === 10) {
             throw new Error(`Step not started: ${post_step_name}`);
         }
+        core.debug(`Waiting for step to start: ${post_step_name}`);
         await new Promise(resolve => setTimeout(resolve, 1000));
     }
     const steps = job.steps;
