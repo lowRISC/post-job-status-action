@@ -3,10 +3,29 @@ description: Post job status to another repository
 author: lowRISC
 
 inputs:
+  repository:
+    description: "The repository to post the status to."
+    required: true
+  sha:
+    description: "The commit sha to post the status to."
+    required: true
+  workflow_name:
+    description: "The name of the workflow. This does not have to match the workflow that invokes this action."
+    required: true
+    default: ${{ github.workflow }}
+  job_name:
+    description: "The name of the job. This needs to match the job that invokes this action."
+    required: true
+  step_name:
+    description: "The name of the step. This needs to match the step name that uses this action."
+    required: true
   token:
     description: "GitHub token that authenticates the running action"
     required: true
     default: ${{ github.token }}
+  pat:
+    description: "GitHub personal access token that authenticates the status posting"
+    required: true
 
 outputs:
   time:
