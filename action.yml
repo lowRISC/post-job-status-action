@@ -1,0 +1,18 @@
+name: post-job-status
+description: Post job status to another repository
+author: lowRISC
+
+inputs:
+  token:
+    description: "GitHub token that authenticates the running action"
+    required: true
+    default: ${{ github.token }}
+
+outputs:
+  time:
+    description: "Your output description here"
+
+runs:
+  using: node20
+  main: dist/index.js
+  post: dist/index.js

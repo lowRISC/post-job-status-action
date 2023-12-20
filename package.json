@@ -1,0 +1,53 @@
+{
+  "name": "post-job-status",
+  "description": "Post job status to another repository",
+  "version": "0.0.0",
+  "author": "",
+  "private": true,
+  "homepage": "https://github.com/lowRISC/post-job-status-action",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/lowRISC/post-job-status-action.git"
+  },
+  "bugs": {
+    "url": "https://github.com/lowRISC/post-job-status-action/issues"
+  },
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
+  "exports": {
+    ".": "./dist/index.js"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "bundle": "npm run format:write && npm run package",
+    "format:write": "prettier --write **/*.ts",
+    "format:check": "prettier --check **/*.ts",
+    "lint": "npx eslint .",
+    "package": "ncc build src/index.ts --license licenses.txt",
+    "package:watch": "npm run package -- --watch",
+    "all": "npm run format:write && npm run lint && npm run package"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "^1.10.1",
+    "@actions/github": "^6.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.5",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "@typescript-eslint/parser": "^6.14.0",
+    "@vercel/ncc": "^0.38.1",
+    "eslint": "^8.56.0",
+    "eslint-plugin-github": "^4.10.1",
+    "eslint-plugin-jsonc": "^2.11.1",
+    "eslint-plugin-prettier": "^5.0.1",
+    "prettier": "^3.1.1",
+    "prettier-eslint": "^16.1.2",
+    "typescript": "^5.3.3"
+  }
+}
