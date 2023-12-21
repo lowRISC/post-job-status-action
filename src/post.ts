@@ -85,9 +85,9 @@ export async function post_run(): Promise<void> {
     sha,
     state: success ? 'success' : 'failure',
     target_url: job!.html_url,
-    description: `${success ? 'Successful in' : 'Failing after'} ${Math.floor(
-      elapsed / 60
-    )}m${elapsed % 60}s`,
+    description: `${success ? 'Successful in' : 'Failing after'} ${
+      elapsed > 60 ? `${Math.round(elapsed / 60)}m` : `${elapsed}s`
+    }`,
     context: `${workflow_name} / ${job_name}`
   });
 }
