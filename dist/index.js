@@ -29019,7 +29019,7 @@ async function run() {
     // the post run is able to identify the steps of interest.
     const step = job.steps.find(step => step.name === step_name);
     if (!step) {
-        throw new Error(`Step not found: ${step_name}`);
+        core.info(`Step not found: ${step_name}, ${JSON.stringify(jobs, null, 2)}`);
     }
     const octokit_pat = github.getOctokit(pat);
     await octokit_pat.rest.repos.createCommitStatus({
