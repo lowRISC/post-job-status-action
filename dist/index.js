@@ -29009,8 +29009,8 @@ async function run() {
         repo,
         run_id: github.context.runId
     });
-    // Find the running job
-    const job = jobs.jobs.find(job => job.name === job_name);
+    // Find the running job. Also accepts `<ANYTHING> / <JOB_NAME>` which can occur in reusable workflows.
+    const job = jobs.jobs.find(job => job.name === job_name || job.name.endsWith(` / ${job_name}`));
     if (!job || !job.steps) {
         throw new Error(`Job not found: ${job_name}`);
     }

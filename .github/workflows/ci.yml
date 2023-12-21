@@ -59,3 +59,6 @@ jobs:
           job_name: Test Action
           step_name: Test Local Action
           pat: ${{ github.token }}
+
+  test-action-reusable:
+    uses: ./.github/workflows/reusable.yml

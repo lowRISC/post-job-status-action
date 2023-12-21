@@ -1,0 +1,24 @@
+name: Reusable
+
+on:
+  workflow_call:
+
+jobs:
+  test-action-reusable:
+    name: Test Action Reusable
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        id: checkout
+        uses: actions/checkout@v4
+
+      - name: Test Local Action
+        uses: ./
+        with:
+          repository: ${{ github.repository }}
+          sha: ${{ github.sha }}
+          workflow_name: Check
+          job_name: Test Action Reusable
+          step_name: Test Local Action
+          pat: ${{ github.token }}
