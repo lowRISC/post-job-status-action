@@ -1,5 +1,6 @@
 import * as core from '@actions/core';
 import * as github from '@actions/github';
+import { RetryableError, retry } from './retry';
 
 export async function post_run(): Promise<void> {
   const repository = core.getInput('repository');
@@ -17,16 +18,15 @@ export async function post_run(): Promise<void> {
 
   const octokit = github.getOctokit(token);
 
-  // The job from API is not updated immediately, wait for a bit until
-  // the current step is marked as running.
-  let job;
   const post_step_name = `Post ${step_name}`;
-  for (let i = 0; i < 10; i++) {
-    ({ data: job } = await octokit.rest.actions.getJobForWorkflowRun({
+
+  // The job from API is not updated immediately, retry until the current step is marked as running.
+  const job = await retry(async () => {
+    const { data: job } = await octokit.rest.actions.getJobForWorkflowRun({
       owner,
       repo,
       job_id
-    }));
+    });
 
     if (!job.steps) {
       throw new Error(`Job not found: ${job_name}`);
@@ -34,19 +34,18 @@ export async function post_run(): Promise<void> {
 
     // Wait until the post step is marked as running
     const post_step = job.steps.find(step => step.name === post_step_name);
-    if (post_step && post_step.started_at) {
-      break;
+    if (!post_step) {
+      throw new RetryableError(`Step not found: ${post_step_name}`);
     }
 
-    if (i === 10) {
-      throw new Error(`Step not started: ${post_step_name}`);
+    if (!post_step.started_at) {
+      throw new RetryableError(`Step not started: ${post_step_name}`);
     }
 
-    core.debug(`Waiting for step to start: ${post_step_name}`);
-    await new Promise(resolve => setTimeout(resolve, 1000));
-  }
+    return job;
+  });
 
-  const steps = job!.steps!;
+  const steps = job.steps!;
   const main_step = steps.findIndex(step => step.name === step_name);
   if (main_step < 0) {
     throw new Error(`Step not found: ${step_name}`);

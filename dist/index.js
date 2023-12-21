@@ -29069,6 +29069,7 @@ Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.post_run = void 0;
 const core = __importStar(__nccwpck_require__(2186));
 const github = __importStar(__nccwpck_require__(5438));
+const retry_1 = __nccwpck_require__(1043);
 async function post_run() {
     const repository = core.getInput('repository');
     const sha = core.getInput('sha');
@@ -29081,30 +29082,27 @@ async function post_run() {
     const { owner, repo } = github.context.repo;
     const [target_owner, target_repo] = repository.split('/');
     const octokit = github.getOctokit(token);
-    // The job from API is not updated immediately, wait for a bit until
-    // the current step is marked as running.
-    let job;
     const post_step_name = `Post ${step_name}`;
-    for (let i = 0; i < 10; i++) {
-        ({ data: job } = await octokit.rest.actions.getJobForWorkflowRun({
+    // The job from API is not updated immediately, retry until the current step is marked as running.
+    const job = await (0, retry_1.retry)(async () => {
+        const { data: job } = await octokit.rest.actions.getJobForWorkflowRun({
             owner,
             repo,
             job_id
-        }));
+        });
         if (!job.steps) {
             throw new Error(`Job not found: ${job_name}`);
         }
         // Wait until the post step is marked as running
         const post_step = job.steps.find(step => step.name === post_step_name);
-        if (post_step && post_step.started_at) {
-            break;
+        if (!post_step) {
+            throw new retry_1.RetryableError(`Step not found: ${post_step_name}`);
         }
-        if (i === 10) {
-            throw new Error(`Step not started: ${post_step_name}`);
+        if (!post_step.started_at) {
+            throw new retry_1.RetryableError(`Step not started: ${post_step_name}`);
         }
-        core.debug(`Waiting for step to start: ${post_step_name}`);
-        await new Promise(resolve => setTimeout(resolve, 1000));
-    }
+        return job;
+    });
     const steps = job.steps;
     const main_step = steps.findIndex(step => step.name === step_name);
     if (main_step < 0) {
@@ -29144,6 +29142,68 @@ async function post_run() {
     });
 }
 exports.post_run = post_run;
+
+
+/***/ }),
+
+/***/ 1043:
+/***/ (function(__unused_webpack_module, exports, __nccwpck_require__) {
+
+"use strict";
+
+var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    var desc = Object.getOwnPropertyDescriptor(m, k);
+    if (!desc || ("get" in desc ? !m.__esModule : desc.writable || desc.configurable)) {
+      desc = { enumerable: true, get: function() { return m[k]; } };
+    }
+    Object.defineProperty(o, k2, desc);
+}) : (function(o, m, k, k2) {
+    if (k2 === undefined) k2 = k;
+    o[k2] = m[k];
+}));
+var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
+    Object.defineProperty(o, "default", { enumerable: true, value: v });
+}) : function(o, v) {
+    o["default"] = v;
+});
+var __importStar = (this && this.__importStar) || function (mod) {
+    if (mod && mod.__esModule) return mod;
+    var result = {};
+    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
+    __setModuleDefault(result, mod);
+    return result;
+};
+Object.defineProperty(exports, "__esModule", ({ value: true }));
+exports.retry = exports.RetryableError = void 0;
+const core = __importStar(__nccwpck_require__(2186));
+class RetryableError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'RetryableError';
+    }
+}
+exports.RetryableError = RetryableError;
+async function wait(delay) {
+    return new Promise(resolve => setTimeout(resolve, delay));
+}
+async function retry(fn, retries = 10, delay = 1000) {
+    for (let i = 0; i < retries - 1; i++) {
+        try {
+            return await fn();
+        }
+        catch (error) {
+            if (error instanceof RetryableError) {
+                core.info(`${error.message}, retry after ${delay}ms`);
+                await wait(delay);
+                continue;
+            }
+            throw error;
+        }
+    }
+    return fn();
+}
+exports.retry = retry;
 
 
 /***/ }),
