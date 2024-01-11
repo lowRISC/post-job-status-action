@@ -1,6 +1,8 @@
 Post Job Status
 ===
 
+This project has been developed to meet lowRISC's internal need and is *not supported* by lowRISC.
+
 This is a GitHub action to post job status to another repository.
 
 This can be useful if you needs to post status in a workflow_dispatch or pull_request_target.
