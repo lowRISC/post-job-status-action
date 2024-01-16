@@ -1,0 +1,11 @@
+Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+
+Files: .node-version
+       .prettierrc.json
+       dist/*
+       package.json
+       package-lock.json
+       tsconfig.json
+       README.md
+Copyright: lowRISC contributors
+License: Apache-2.0

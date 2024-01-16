@@ -1,3 +1,7 @@
+# Copyright lowRISC contributors.
+#
+# SPDX-License-Identifier: Apache-2.0
+
 env:
   node: true
   es6: true
