@@ -11,9 +11,11 @@ on:
       - main
 
 jobs:
-  check:
-    name: Check
+  build:
+    name: Build
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout
@@ -37,22 +39,35 @@ jobs:
       - name: Build dist/ Directory
         run: npm run bundle
 
-      - name: Compare Directories
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: dist
+          path: |
+            .
+            !.git
+
+      - name: Publish to dist branch
+        if: github.event_name == 'push'
         run: |
-          if [ "$(git diff --ignore-space-at-eol --text dist/ | wc -l)" -gt "0" ]; then
-            echo "Detected uncommitted changes after build. See status below:"
-            git diff --ignore-space-at-eol --text dist/
-            exit 1
-          fi
+          git config --local user.name "github-actions[bot]"
+          git config --local user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          # Add dist without respecting .gitignore
+          git add dist -f
+          git commit -am "Publish from GitHub actions"
+          git switch -c dist
+          git push -u origin dist -f
 
   test-action:
     name: Test Action
     runs-on: ubuntu-latest
+    needs: build
 
     steps:
-      - name: Checkout
-        id: checkout
-        uses: actions/checkout@v4
+      - name: Download artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: dist
 
       - name: Test Local Action
         uses: ./
@@ -65,4 +80,5 @@ jobs:
           pat: ${{ github.token }}
 
   test-action-reusable:
+    needs: build
     uses: ./.github/workflows/reusable.yml
