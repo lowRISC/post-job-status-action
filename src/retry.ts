@@ -16,13 +16,13 @@ async function wait(delay: number): Promise<void> {
 }
 
 export async function retry<T>(
-  fn: () => Promise<T>,
+  fn: (last_attempt: boolean) => Promise<T>,
   retries = 8,
   delay = 1000
 ): Promise<T> {
   for (let i = 0; i < retries - 1; i++) {
     try {
-      return await fn();
+      return await fn(false);
     } catch (error) {
       if (error instanceof RetryableError) {
         core.info(`${error.message}, retry after ${delay}ms`);
@@ -35,5 +35,5 @@ export async function retry<T>(
     }
   }
 
-  return fn();
+  return fn(true);
 }

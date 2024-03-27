@@ -25,7 +25,7 @@ export async function post_run(): Promise<void> {
   const post_step_name = `Post ${step_name}`;
 
   // The job from API is not updated immediately, retry until the current step is marked as running.
-  const result = await retry(async () => {
+  const result = await retry(async last_attempt => {
     const { data: job } = await octokit.rest.actions.getJobForWorkflowRun({
       owner,
       repo,
@@ -57,6 +57,14 @@ export async function post_run(): Promise<void> {
       if (job.steps[i].status !== 'completed') {
         // GitHub actions status update is asynchronous, so it's possible for the API/UI to reflect that two jobs are
         // running at the same time. Retry in this case.
+        if (last_attempt) {
+          // GitHub seems to have a bug where sometimes a step can be stuck in pending state until the whole job completes.
+          // If this happens then we'll just assume it's successful to avoid frequent CI breakage.
+          core.warning(
+            `Step not completed: ${job.steps[i].name}. Assuming it's successful`
+          );
+          continue;
+        }
         throw new RetryableError(`Step not completed: ${job.steps[i].name}`);
       }
       switch (job.steps[i].conclusion) {
