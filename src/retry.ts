@@ -17,8 +17,8 @@ async function wait(delay: number): Promise<void> {
 
 export async function retry<T>(
   fn: () => Promise<T>,
-  retries = 15,
-  delay = 2000
+  retries = 8,
+  delay = 1000
 ): Promise<T> {
   for (let i = 0; i < retries - 1; i++) {
     try {
@@ -27,6 +27,7 @@ export async function retry<T>(
       if (error instanceof RetryableError) {
         core.info(`${error.message}, retry after ${delay}ms`);
         await wait(delay);
+        delay *= 2;
         continue;
       }
 
