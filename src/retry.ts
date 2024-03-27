@@ -17,8 +17,8 @@ async function wait(delay: number): Promise<void> {
 
 export async function retry<T>(
   fn: () => Promise<T>,
-  retries = 10,
-  delay = 1000
+  retries = 15,
+  delay = 2000
 ): Promise<T> {
   for (let i = 0; i < retries - 1; i++) {
     try {
